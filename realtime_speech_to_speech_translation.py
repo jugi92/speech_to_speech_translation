@@ -75,7 +75,7 @@ def main():
     def synthesis_error_cb(evt):
         nonlocal pending_synthesis
         pending_synthesis = False
-        logger.error(f"Speech synthesis error: {evt.result.error_details}")
+        logger.error("Speech synthesis error: %s", evt.result.error_details)
 
     # Connect synthesis callbacks
     synthesizer.synthesis_completed.connect(synthesis_completed_cb)
@@ -85,7 +85,7 @@ def main():
     def recognizing_callback(evt):
         # We don't synthesize partial results to avoid audio interruptions
         if evt.result.text:
-            logger.info(f"[Partial]: {evt.result.text}")
+            logger.info("[Partial]: %s", evt.result.text)
 
     # Handle final recognized text
     def recognized_callback(evt):
@@ -93,26 +93,26 @@ def main():
 
         if evt.result.reason == speechsdk.ResultReason.TranslatedSpeech:
             translated = list(evt.result.translations.values())[0]
-            logger.info(f"[Translated]: {translated}")
+            logger.info("[Translated]: %s", translated)
 
             # Only synthesize if not already synthesizing and text is different
             if not pending_synthesis and translated != last_translated_text:
                 pending_synthesis = True
                 last_translated_text = translated
-                logger.info(f"Attempting to speak text: {translated}")
+                logger.info("Attempting to speak text: %s", translated)
                 # Use synchronous speak_text instead of async to ensure audio completes
                 result = synthesizer.speak_text(translated)
                 if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
                     logger.info("Speech synthesis succeeded")
                 else:
-                    logger.error(f"Speech synthesis failed: {result.reason}")
+                    logger.error("Speech synthesis failed: %s", result.reason)
                 # Small delay to ensure audio completes playing
                 time.sleep(0.2)
                 pending_synthesis = False
 
         elif evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
             text = evt.result.text
-            logger.info(f"[Recognized]: {text}")
+            logger.info("[Recognized]: %s", text)
 
     # Handle session end or errors
     def stop_cb(evt):
@@ -121,7 +121,7 @@ def main():
         if isinstance(
             evt, speechsdk.translation.TranslationRecognitionCanceledEventArgs
         ):
-            logger.error(f"Recognition canceled: {evt.error_details}")
+            logger.error("Recognition canceled: %s", evt.error_details)
 
     # Connect event handlers
     recognizer.recognizing.connect(recognizing_callback)
